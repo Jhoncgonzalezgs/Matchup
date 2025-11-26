@@ -1,6 +1,4 @@
 import { Pool } from 'pg';
-import fs from 'fs';
-import path from 'path';
 
 const connectionString = process.env.DATABASE_URL || (() => {
   const host = process.env.PGHOST || 'localhost';
@@ -11,7 +9,8 @@ const connectionString = process.env.DATABASE_URL || (() => {
   return `postgresql://${user}:${password}@${host}:${port}/${database}`;
 })();
 
-const pool = new Pool({ connectionString });
+const useSsl = (process.env.PGSSLMODE && process.env.PGSSLMODE !== 'disable') || process.env.NODE_ENV === 'production';
+const pool = new Pool({ connectionString, ssl: useSsl ? { rejectUnauthorized: false } : false });
 
 export const query = (text, params) => pool.query(text, params);
 export const get = async (text, params) => {
@@ -29,6 +28,15 @@ export const run = async (text, params) => {
 
 // Ensure migrations / tables exist
 export async function init() {
+  console.log('📌 Inicializando conexión a PostgreSQL');
+  try {
+    // Test connection
+    const ping = await pool.query('SELECT 1');
+    console.log('📌 PostgreSQL connection test OK');
+  } catch (err) {
+    console.error('❌ Error en la conexión a PostgreSQL (test):', err.message);
+    throw err;
+  }
   // Create tables adapted for PostgreSQL
   await pool.query(`CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
@@ -98,6 +106,14 @@ export async function init() {
     target_user INTEGER,
     created_at TIMESTAMPTZ DEFAULT now()
   );`);
+
+  // List tables to confirm
+  try {
+    const tables = await pool.query("SELECT tablename FROM pg_tables WHERE schemaname='public'");
+    console.log('📌 Public tables:', tables.rows.map(r => r.tablename).join(', '));
+  } catch (err) {
+    console.error('❌ Error obteniendo lista de tablas:', err.message);
+  }
 
   console.log('✔ Postgres tables initialized');
 }
