@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import path from "path";
+import fs from "fs";
 import dotenv from "dotenv";
 
 // Cargar variables de entorno
@@ -23,7 +24,13 @@ app.use(express.json());
 app.use(cors({ origin: "*", methods: "GET,POST,PUT,DELETE" }));
 
 // Servir imágenes (uploads/)
-app.use("/uploads", express.static(path.resolve("uploads")));
+// Determinar carpeta uploads en base a env, por ejemplo '/data/uploads' en Docker
+const uploadsDir = process.env.UPLOADS_DIR || "uploads";
+// Asegurar que exista la carpeta
+if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+}
+app.use("/uploads", express.static(path.resolve(uploadsDir)));
 
 // Rutas reales
 app.use("/auth", authRoutes);      // registro, login, confirmación, reset
@@ -43,6 +50,11 @@ app.get("/", (req, res) => {
     res.send("🔥 Bienvenido a MatchUp API (Backend funcionando)");
 });
 
+// Health check (Render, Kubernetes, etc. pueden usar esto)
+app.get("/health", (_req, res) => {
+    res.json({ status: "ok", timestamp: Date.now() });
+});
+
 // Manejo global de errores
 app.use((err, req, res, next) => {
     console.error("❌ Error:", err.message);
@@ -51,6 +63,11 @@ app.use((err, req, res, next) => {
 
 // Inicialización del servidor
 const PORT = process.env.PORT || 3000;
+
+if (!process.env.JWT_SECRET) {
+    console.warn("⚠️ JWT_SECRET no definido. Genera uno y colócalo en las variables de entorno para entornos de producción.");
+}
+
 app.listen(PORT, () => {
     console.log(`🚀 MatchUp backend running on port ${PORT}`);
 });

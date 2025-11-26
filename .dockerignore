@@ -1,0 +1,9 @@
+node_modules
+npm-debug.log
+.env
+matchup.db
+uploads
+.git
+.gitignore
+.vscode
+.DS_Store

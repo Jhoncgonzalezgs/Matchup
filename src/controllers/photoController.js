@@ -113,7 +113,8 @@ export const deletePhoto = (req, res) => {
             if (err) return res.status(500).json({ error: "Error interno" });
             if (!row) return res.status(404).json({ error: "Foto no encontrada" });
 
-            const filePath = path.join("uploads", row.file_path);
+            const uploadsDir = process.env.UPLOADS_DIR || "uploads";
+            const filePath = path.join(uploadsDir, row.file_path);
 
             // 2. Eliminar archivo físico
             if (fs.existsSync(filePath)) {

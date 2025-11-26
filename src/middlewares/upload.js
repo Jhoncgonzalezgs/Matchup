@@ -1,10 +1,19 @@
+import fs from "fs";
 import multer from "multer";
 import path from "path";
 
-// Directorio donde se guardan las fotos
+// Directorio donde se guardan las fotos (configurable por env)
+const uploadsDir = process.env.UPLOADS_DIR || "uploads";
+const resolvedUploadsDir = path.resolve(uploadsDir);
+
+// Asegurarnos de que exista el directorio
+if (!fs.existsSync(resolvedUploadsDir)) {
+    fs.mkdirSync(resolvedUploadsDir, { recursive: true });
+}
+
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, "uploads/");
+    destination: (_req, _file, cb) => {
+        cb(null, resolvedUploadsDir);
     },
     filename: (req, file, cb) => {
         const uniqueName =

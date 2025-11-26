@@ -1,8 +1,19 @@
 import sqlite3 from "sqlite3";
+import fs from "fs";
+import path from "path";
 sqlite3.verbose();
 
+// Determinar ruta de la base de datos desde variable de entorno
+const dbPath = process.env.DB_PATH || "./matchup.db";
+const dbDir = path.dirname(dbPath);
+
+// Asegurarse de que el directorio exista (útil para deployments en Docker)
+if (!fs.existsSync(dbDir)) {
+    fs.mkdirSync(dbDir, { recursive: true });
+}
+
 // Conexión a la base de datos SQLite
-const db = new sqlite3.Database("./matchup.db", (err) => {
+const db = new sqlite3.Database(dbPath, (err) => {
     if (err) console.error("❌ Error al conectar a la BD:", err.message);
     else console.log("✔ Base de datos conectada");
 });

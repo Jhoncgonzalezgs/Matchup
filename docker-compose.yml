@@ -1,0 +1,15 @@
+version: "3.8"
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - JWT_SECRET=secret_for_local
+      - DB_PATH=/data/matchup.db
+      - UPLOADS_DIR=/data/uploads
+    volumes:
+      - ./data:/data
+    restart: unless-stopped
