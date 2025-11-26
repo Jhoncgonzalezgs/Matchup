@@ -12,6 +12,29 @@ const connectionString = process.env.DATABASE_URL || (() => {
 const useSsl = (process.env.PGSSLMODE && process.env.PGSSLMODE !== 'disable') || process.env.NODE_ENV === 'production';
 const pool = new Pool({ connectionString, ssl: useSsl ? { rejectUnauthorized: false } : false });
 
+async function waitForDb(retries = 10, delay = 3000) {
+  const parsedHost = process.env.PGHOST || (() => {
+    try {
+      const url = new URL(connectionString);
+      return url.hostname;
+    } catch (_) { return null; }
+  })();
+
+  console.log(`📌 Connecting to Postgres host: ${parsedHost || 'unknown'} port: ${process.env.PGPORT || 5432}`);
+
+  for (let i = 0; i < retries; i++) {
+    try {
+      await pool.query('SELECT 1');
+      return;
+    } catch (err) {
+      const attempt = i + 1;
+      console.warn(`⚠️ Postgres not ready yet (attempt ${attempt}/${retries}): ${err.message}`);
+      if (attempt < retries) await new Promise(r => setTimeout(r, delay));
+    }
+  }
+  throw new Error('Unable to connect to Postgres after multiple retries');
+}
+
 export const query = (text, params) => pool.query(text, params);
 export const get = async (text, params) => {
   const res = await pool.query(text, params);
@@ -29,9 +52,13 @@ export const run = async (text, params) => {
 // Ensure migrations / tables exist
 export async function init() {
   console.log('📌 Inicializando conexión a PostgreSQL');
+  const parsedHost = process.env.PGHOST || (() => { try { const u = new URL(connectionString); return u.hostname;} catch(_) {return null;} })();
+  if (process.env.NODE_ENV === 'production' && (parsedHost === 'localhost' || parsedHost === '127.0.0.1' || parsedHost === '::1')) {
+    console.error(`❌ Parece que PGHOST está apuntando a '${parsedHost}' en producción. En Render la base de datos no está en localhost. Por favor, adjunta un servicio Postgres y configura DATABASE_URL o PGHOST/PGUSER/PGPASSWORD con las credenciales correctas.`);
+    throw new Error('Postgres host en producción no debe ser localhost');
+  }
   try {
-    // Test connection
-    const ping = await pool.query('SELECT 1');
+    await waitForDb(12, 2000);
     console.log('📌 PostgreSQL connection test OK');
   } catch (err) {
     console.error('❌ Error en la conexión a PostgreSQL (test):', err.message);
