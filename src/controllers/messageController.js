@@ -1,4 +1,4 @@
-import db from "../db/database.js";
+import db from "../db/postgres.js";
 
 // ======================================================
 // OBTENER ID DE MATCH REAL (mutuo)
@@ -6,32 +6,12 @@ import db from "../db/database.js";
 // A dio like a B
 // Y B dio like a A
 // ======================================================
-const getRealMatchId = (userA, userB) => {
-    return new Promise((resolve, reject) => {
-        db.get(
-            `SELECT id FROM matches
-             WHERE user1_id = ? AND user2_id = ?`,
-            [userA, userB],
-            (err, likeAB) => {
-                if (err) return reject(err);
-                if (!likeAB) return resolve(null);
-
-                db.get(
-                    `SELECT id FROM matches
-                     WHERE user1_id = ? AND user2_id = ?`,
-                    [userB, userA],
-                    (err, likeBA) => {
-                        if (err) return reject(err);
-                        if (!likeBA) return resolve(null);
-
-                        // ID del match = menor ID de ambas filas
-                        const matchId = Math.min(likeAB.id, likeBA.id);
-                        resolve(matchId);
-                    }
-                );
-            }
-        );
-    });
+const getRealMatchId = async (userA, userB) => {
+    const likeAB = await db.get(`SELECT id FROM matches WHERE user1_id = $1 AND user2_id = $2`, [userA, userB]);
+    if (!likeAB) return null;
+    const likeBA = await db.get(`SELECT id FROM matches WHERE user1_id = $1 AND user2_id = $2`, [userB, userA]);
+    if (!likeBA) return null;
+    return Math.min(likeAB.id, likeBA.id);
 };
 
 // ======================================================
@@ -52,15 +32,8 @@ export const sendMessage = async (req, res) => {
             return res.status(403).json({ error: "No tienes match con este usuario" });
         }
 
-        db.run(
-            `INSERT INTO messages (match_id, sender_id, content)
-             VALUES (?, ?, ?)`,
-            [matchId, senderId, content],
-            (err) => {
-                if (err) return res.status(500).json({ error: err.message });
-                res.json({ message: "Mensaje enviado", matchId });
-            }
-        );
+        await db.run(`INSERT INTO messages (match_id, sender_id, content) VALUES ($1, $2, $3)`, [matchId, senderId, content]);
+        res.json({ message: "Mensaje enviado", matchId });
     } catch (error) {
         res.status(500).json({ error: "Error interno" });
     }
@@ -80,16 +53,8 @@ export const getMessages = async (req, res) => {
             return res.status(403).json({ error: "No tienes match con este usuario" });
         }
 
-        db.all(
-            `SELECT * FROM messages 
-             WHERE match_id = ?
-             ORDER BY created_at ASC`,
-            [matchId],
-            (err, rows) => {
-                if (err) return res.status(500).json({ error: err.message });
-                res.json({ matchId, messages: rows });
-            }
-        );
+        const rows = await db.all(`SELECT * FROM messages WHERE match_id = $1 ORDER BY created_at ASC`, [matchId]);
+        res.json({ matchId, messages: rows });
     } catch (error) {
         res.status(500).json({ error: "Error interno" });
     }
@@ -109,16 +74,8 @@ export const markAsRead = async (req, res) => {
             return res.status(403).json({ error: "No tienes match con este usuario" });
         }
 
-        db.run(
-            `UPDATE messages 
-             SET read = 1
-             WHERE match_id = ? AND sender_id != ?`,
-            [matchId, userId],
-            (err) => {
-                if (err) return res.status(500).json({ error: err.message });
-                res.json({ message: "Mensajes marcados como leídos" });
-            }
-        );
+        await db.run(`UPDATE messages SET read = true WHERE match_id = $1 AND sender_id != $2`, [matchId, userId]);
+        res.json({ message: "Mensajes marcados como leídos" });
     } catch (error) {
         res.status(500).json({ error: "Error interno" });
     }
@@ -138,17 +95,8 @@ export const getLastMessage = async (req, res) => {
             return res.json({ lastMessage: null });
         }
 
-        db.get(
-            `SELECT * FROM messages
-             WHERE match_id = ?
-             ORDER BY created_at DESC
-             LIMIT 1`,
-            [matchId],
-            (err, row) => {
-                if (err) return res.status(500).json({ error: err.message });
-                res.json({ lastMessage: row });
-            }
-        );
+        const row = await db.get(`SELECT * FROM messages WHERE match_id = $1 ORDER BY created_at DESC LIMIT 1`, [matchId]);
+        res.json({ lastMessage: row });
     } catch (error) {
         res.status(500).json({ error: "Error interno" });
     }

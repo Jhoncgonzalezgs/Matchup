@@ -9,7 +9,7 @@ import swaggerUi from "swagger-ui-express";
 // Cargar variables de entorno
 dotenv.config();
 
-import db from "./src/db/database.js";
+import db from "./src/db/postgres.js";
 
 // Importación de rutas
 import userRoutes from "./src/routes/userRoutes.js";
@@ -43,9 +43,9 @@ app.use("/admin", adminRoutes);    // admin panel
 app.use("/photos", photoRoutes);   // subir y obtener fotos
 
 // Comprobación de base de datos
-db.serialize(() => {
-    console.log("📌 Base de datos cargada correctamente");
-});
+// Initialize Postgres and create tables
+db.init().then(() => console.log('📌 Base de datos PostgreSQL inicializada correctamente'))
+    .catch(err => console.error('❌ Error inicializando la BD Postgres:', err.message));
 
 app.get("/", (req, res) => {
     res.send("🔥 Bienvenido a MatchUp API (Backend funcionando)");

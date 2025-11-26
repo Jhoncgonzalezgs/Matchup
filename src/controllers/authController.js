@@ -1,4 +1,4 @@
-import db from "../db/database.js";
+import db from "../db/postgres.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
@@ -6,34 +6,26 @@ import crypto from "crypto";
 // ============================================
 // LOGIN con email o documento
 // ============================================
-export const login = (req, res) => {
+export const login = async (req, res) => {
     const { emailOrDocument, password } = req.body;
 
-    db.get(
-        `SELECT * FROM users WHERE email = ? OR document = ?`,
-        [emailOrDocument, emailOrDocument],
-        async (err, user) => {
-            if (err) return res.status(500).json({ error: "Error interno" });
-            if (!user) return res.status(400).json({ error: "Credenciales inválidas" });
+    try {
+        const user = await db.get(`SELECT * FROM users WHERE email = $1 OR document = $2`, [emailOrDocument, emailOrDocument]);
+        if (!user) return res.status(400).json({ error: "Credenciales inválidas" });
 
-            if (user.blocked) return res.status(403).json({ error: "Usuario bloqueado" });
-            if (!user.confirmed) return res.status(403).json({ error: "Cuenta no confirmada" });
+        if (user.blocked) return res.status(403).json({ error: "Usuario bloqueado" });
+        if (!user.confirmed) return res.status(403).json({ error: "Cuenta no confirmada" });
 
-            const passwordMatch = await bcrypt.compare(password, user.password);
-            if (!passwordMatch) return res.status(400).json({ error: "Contraseña incorrecta" });
+        const passwordMatch = await bcrypt.compare(password, user.password);
+        if (!passwordMatch) return res.status(400).json({ error: "Contraseña incorrecta" });
 
-            const token = jwt.sign(
-                { id: user.id, role: user.role },
-                process.env.JWT_SECRET,
-                { expiresIn: "7d" }
-            );
+        const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "7d" });
 
-            res.json({
-                message: "Login exitoso",
-                token
-            });
-        }
-    );
+        res.json({ message: "Login exitoso", token });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Error interno" });
+    }
 };
 
 // ============================================
@@ -44,88 +36,66 @@ export const register = async (req, res) => {
 
     const hashed = await bcrypt.hash(password, 10);
 
-    db.run(
-        `INSERT INTO users (email, document, password) VALUES (?, ?, ?)`,
-        [email, document, hashed],
-        function (err) {
-            if (err) {
-                if (err.message.includes("UNIQUE")) {
-                    return res.status(400).json({ error: "Email o documento ya registrado" });
-                }
-                return res.status(500).json({ error: "Error al registrar usuario" });
-            }
+    try {
+        const insertUser = await db.run(
+            `INSERT INTO users (email, document, password) VALUES ($1, $2, $3) RETURNING id`,
+            [email, document, hashed]
+        );
 
-            const userId = this.lastID;
+        const userId = insertUser.rows && insertUser.rows[0] ? insertUser.rows[0].id : null;
 
-            const token = crypto.randomBytes(20).toString("hex");
+        const token = crypto.randomBytes(20).toString("hex");
 
-            db.run(
-                `INSERT INTO tokens (user_id, token, type) VALUES (?, ?, ?)`,
-                [userId, token, "confirm"]
-            );
+        await db.run(`INSERT INTO tokens (user_id, token, type) VALUES ($1, $2, $3)`, [userId, token, "confirm"]);
 
-            console.log("TOKEN DE CONFIRMACIÓN:", token);
+        console.log("TOKEN DE CONFIRMACIÓN:", token);
 
-            res.json({
-                message: "Usuario registrado. Revisa tu correo para confirmar tu cuenta.",
-                confirm_token_dev: token
-            });
+        res.json({ message: "Usuario registrado. Revisa tu correo para confirmar tu cuenta.", confirm_token_dev: token });
+    } catch (err) {
+        if (err && err.code === '23505') { // unique_violation
+            return res.status(400).json({ error: "Email o documento ya registrado" });
         }
-    );
+        console.error(err);
+        res.status(500).json({ error: "Error al registrar usuario" });
+    }
 };
 
 // ============================================
 // CONFIRMAR CUENTA
 // ============================================
-export const confirmAccount = (req, res) => {
+export const confirmAccount = async (req, res) => {
     const { token } = req.params;
+    try {
+        const row = await db.get(`SELECT * FROM tokens WHERE token = $1 AND type = 'confirm'`, [token]);
+        if (!row) return res.status(400).json({ error: "Token inválido o expirado" });
 
-    db.get(
-        `SELECT * FROM tokens WHERE token = ? AND type = 'confirm'`,
-        [token],
-        (err, row) => {
-            if (err) return res.status(500).json({ error: "Error interno" });
-            if (!row) return res.status(400).json({ error: "Token inválido o expirado" });
+        await db.run(`UPDATE users SET confirmed = true WHERE id = $1`, [row.user_id]);
+        await db.run(`DELETE FROM tokens WHERE id = $1`, [row.id]);
 
-            db.run(
-                `UPDATE users SET confirmed = 1 WHERE id = ?`,
-                [row.user_id],
-                err => {
-                    if (err) return res.status(500).json({ error: "Error al confirmar cuenta" });
-
-                    db.run(`DELETE FROM tokens WHERE id = ?`, [row.id]); // borrar token
-
-                    res.json({ message: "Cuenta confirmada correctamente" });
-                }
-            );
-        }
-    );
+        res.json({ message: "Cuenta confirmada correctamente" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Error interno" });
+    }
 };
 
 // ============================================
 // ENVIAR TOKEN DE RECUPERACIÓN DE CONTRASEÑA
 // ============================================
-export const sendRecoveryEmail = (req, res) => {
+export const sendRecoveryEmail = async (req, res) => {
     const { email } = req.body;
-
-    db.get(`SELECT id FROM users WHERE email = ?`, [email], (err, user) => {
-        if (err) return res.status(500).json({ error: "Error interno" });
+    try {
+        const user = await db.get(`SELECT id FROM users WHERE email = $1`, [email]);
         if (!user) return res.status(404).json({ error: "Correo no encontrado" });
 
         const token = crypto.randomBytes(20).toString("hex");
-
-        db.run(
-            `INSERT INTO tokens (user_id, token, type) VALUES (?, ?, ?)`,
-            [user.id, token, "reset"]
-        );
-
+        await db.run(`INSERT INTO tokens (user_id, token, type) VALUES ($1, $2, $3)`, [user.id, token, 'reset']);
         console.log("TOKEN DE RECUPERACIÓN:", token);
-
-        res.json({
-            message: "Correo enviado para recuperación.",
-            reset_token_dev: token
-        });
-    });
+        res.json({ message: "Correo enviado para recuperación.", reset_token_dev: token });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Error interno" });
+    }
 };
 
 // ============================================
@@ -133,55 +103,39 @@ export const sendRecoveryEmail = (req, res) => {
 // ============================================
 export const resetPassword = async (req, res) => {
     const { token, newPassword } = req.body;
+    try {
+        const row = await db.get(`SELECT * FROM tokens WHERE token = $1 AND type = 'reset'`, [token]);
+        if (!row) return res.status(400).json({ error: "Token inválido" });
 
-    db.get(
-        `SELECT * FROM tokens WHERE token = ? AND type = 'reset'`,
-        [token],
-        async (err, row) => {
-            if (err) return res.status(500).json({ error: "Error interno" });
-            if (!row) return res.status(400).json({ error: "Token inválido" });
+        const hashed = await bcrypt.hash(newPassword, 10);
+        await db.run(`UPDATE users SET password = $1 WHERE id = $2`, [hashed, row.user_id]);
+        await db.run(`DELETE FROM tokens WHERE id = $1`, [row.id]);
 
-            const hashed = await bcrypt.hash(newPassword, 10);
-
-            db.run(
-                `UPDATE users SET password = ? WHERE id = ?`,
-                [hashed, row.user_id],
-                err => {
-                    if (err) return res.status(500).json({ error: "Error al actualizar contraseña" });
-
-                    db.run(`DELETE FROM tokens WHERE id = ?`, [row.id]);
-
-                    res.json({ message: "Contraseña actualizada correctamente" });
-                }
-            );
-        }
-    );
+        res.json({ message: "Contraseña actualizada correctamente" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Error interno" });
+    }
 };
 
 // ============================================
 // CAMBIAR CONTRASEÑA (usuario logueado)
 // ============================================
-export const changePassword = (req, res) => {
+export const changePassword = async (req, res) => {
     const userId = req.user.id;
     const { oldPassword, newPassword } = req.body;
-
-    db.get(`SELECT password FROM users WHERE id = ?`, [userId], async (err, user) => {
-        if (err) return res.status(500).json({ error: "Error interno" });
+    try {
+        const user = await db.get(`SELECT password FROM users WHERE id = $1`, [userId]);
         if (!user) return res.status(404).json({ error: "Usuario no encontrado" });
 
         const match = await bcrypt.compare(oldPassword, user.password);
         if (!match) return res.status(400).json({ error: "Contraseña actual incorrecta" });
 
         const hashed = await bcrypt.hash(newPassword, 10);
-
-        db.run(
-            `UPDATE users SET password = ? WHERE id = ?`,
-            [hashed, userId],
-            err => {
-                if (err) return res.status(500).json({ error: "Error al cambiar contraseña" });
-
-                res.json({ message: "Contraseña cambiada con éxito" });
-            }
-        );
-    });
+        await db.run(`UPDATE users SET password = $1 WHERE id = $2`, [hashed, userId]);
+        res.json({ message: "Contraseña cambiada con éxito" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Error interno" });
+    }
 };

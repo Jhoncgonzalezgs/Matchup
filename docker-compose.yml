@@ -8,8 +8,26 @@ services:
       - NODE_ENV=development
       - PORT=3000
       - JWT_SECRET=secret_for_local
-      - DB_PATH=/data/matchup.db
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/matchup
+      - PGHOST=db
+      - PGUSER=postgres
+      - PGPASSWORD=postgres
+      - PGDATABASE=matchup
+      - PGPORT=5432
       - UPLOADS_DIR=/data/uploads
     volumes:
       - ./data:/data
     restart: unless-stopped
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15
+    environment:
+      - POSTGRES_DB=matchup
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
