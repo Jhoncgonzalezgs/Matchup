@@ -4,12 +4,60 @@ import { giveLike, getMatches, removeMatch } from "../controllers/matchControlle
 
 const router = express.Router();
 
+/**
+ * @openapi
+ * /match/like:
+ *   post:
+ *     security:
+ *       - bearerAuth: []
+ *     summary: Dar like a usuario
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               toUserId:
+ *                 type: integer
+ *     responses:
+ *       200:
+ *         description: Like enviado o Match detectado
+ */
 // Dar like a un usuario
 router.post("/like", auth, giveLike);
 
+/**
+ * @openapi
+ * /match:
+ *   get:
+ *     security:
+ *       - bearerAuth: []
+ *     summary: Obtener lista de matches (mutuos)
+ *     responses:
+ *       200:
+ *         description: Lista de matches
+ */
 // Obtener todos los matches del usuario autenticado
 router.get("/", auth, getMatches);
 
+/**
+ * @openapi
+ * /match/{otherUserId}:
+ *   delete:
+ *     summary: Eliminar match con otro usuario
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: otherUserId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Match eliminado correctamente
+ */
 // Eliminar un match
 router.delete("/:otherUserId", auth, removeMatch);
 

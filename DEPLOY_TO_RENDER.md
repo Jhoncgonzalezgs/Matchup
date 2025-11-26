@@ -21,6 +21,9 @@ Render despliega desde GitHub, GitLab o un repositorio público/privado.
 - UPLOADS_DIR=/data/uploads
 - SMTP_HOST (opcional), SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM
 
+Adicionalmente, para que la documentación Swagger muestre las rutas con la URL correcta, configura:
+- BASE_URL=https://<tu-url-en-render>
+
 ### Uso del disco persistente
 - Render ofrece la posibilidad de añadir un **Persistent Disk** a tu servicio y montarlo en */data* ; eso mantendrá `matchup.db` y la carpeta `uploads/` entre despliegues.
 - Si no añades un disk persistente, no uses SQLite en producción: usa una base de datos administrada como PostgreSQL y actualiza `DB_PATH` y los adaptadores.
@@ -39,5 +42,11 @@ Render construirá la imagen usando el Dockerfile y desplegará la app.
 ## 7) Cambios en la app para producción
 - `DB_PATH` y `UPLOADS_DIR` ahora son configurables con variables de entorno.
 - `uploads` se sirve desde `UPLOADS_DIR`.
+
+## 7) Documentación Swagger
+
+- La API incluye documentación OpenAPI accesible en: `/docs` (Swagger UI).
+- Ruta JSON del spec: `/docs.json`.
+- Si desplegas en Render y el dominio es `https://example.onrender.com`, la documentación estará disponible en `https://example.onrender.com/docs`.
 
 Si quieres, puedo crear los scripts para migrar a PostgreSQL o añadir un servicio `docker-compose` para pruebas locales con una DB persistente.

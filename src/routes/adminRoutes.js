@@ -5,9 +5,42 @@ import { isAdmin } from "../middlewares/isAdmin.js";
 
 const router = express.Router();
 
+/**
+ * @openapi
+ * /admin/users:
+ *   get:
+ *     security:
+ *       - bearerAuth: []
+ *     summary: Listar todos los usuarios (solo admin)
+ *     responses:
+ *       200:
+ *         description: Lista de usuarios
+ */
 // SOLO ADMIN → ver lista de usuarios
 router.get("/users", auth, isAdmin, listUsers);
 
+/**
+ * @openapi
+ * /admin/block:
+ *   post:
+ *     security:
+ *       - bearerAuth: []
+ *     summary: Bloquear o desbloquear usuario por id (solo admin)
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               userId:
+ *                 type: integer
+ *               block:
+ *                 type: integer
+ *     responses:
+ *       200:
+ *         description: Usuario bloqueado/desbloqueado
+ */
 // SOLO ADMIN → bloquear / desbloquear usuarios
 router.post("/block", auth, isAdmin, blockUser);
 

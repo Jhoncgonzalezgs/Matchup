@@ -15,26 +15,137 @@ const router = express.Router();
 // RUTAS PÚBLICAS (sin autenticación)
 // ========================================
 
-// Login con email o número de documento
+/**
+ * @openapi
+ * /auth/login:
+ *   post:
+ *     summary: Iniciar sesión
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               emailOrDocument:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Login exitoso y token JWT
+ */
 router.post("/login", login);
 
-// Registro de nuevo usuario
+/**
+ * @openapi
+ * /auth/register:
+ *   post:
+ *     summary: Registrar un nuevo usuario
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *               document:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Usuario registrado y token de confirmación devuelto (dev only)
+ */
 router.post("/register", register);
 
-// Confirmar cuenta con token
+/**
+ * @openapi
+ * /auth/confirm/{token}:
+ *   get:
+ *     summary: Confirmar cuenta de usuario
+ *     parameters:
+ *       - in: path
+ *         name: token
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Cuenta confirmada correctamente
+ */
 router.get("/confirm/:token", confirmAccount);
 
-// Solicitar correo con token de recuperación
+/**
+ * @openapi
+ * /auth/recover:
+ *   post:
+ *     summary: Solicitar token de recuperación de contraseña
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Token de recuperación enviado (dev only muestra token)
+ */
 router.post("/recover", sendRecoveryEmail);
 
-// Cambiar contraseña usando token
+/**
+ * @openapi
+ * /auth/reset-password:
+ *   post:
+ *     summary: Restablecer contraseña usando token de recuperación
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               token:
+ *                 type: string
+ *               newPassword:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Contraseña actualizada correctamente
+ */
 router.post("/reset-password", resetPassword);
 
 // ========================================
 // RUTAS AUTENTICADAS (requieren token)
 // ========================================
 
-// Cambiar contraseña (requiere estar logueado)
+/**
+ * @openapi
+ * /auth/change-password:
+ *   post:
+ *     summary: Cambiar contraseña del usuario autenticado
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               oldPassword:
+ *                 type: string
+ *               newPassword:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Contraseña cambiada con éxito
+ */
 router.post("/change-password", auth, changePassword);
 
 export default router;
