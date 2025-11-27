@@ -32,6 +32,8 @@ const uploadsDir = process.env.UPLOADS_DIR || "uploads";
 if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true });
 }
+// Servir archivos estáticos del frontend (carpeta public)
+app.use(express.static(path.resolve("public")));
 app.use("/uploads", express.static(path.resolve(uploadsDir)));
 
 // Rutas reales
@@ -47,7 +49,12 @@ app.use("/photos", photoRoutes);   // subir y obtener fotos
 db.init().then(() => console.log('📌 Base de datos PostgreSQL inicializada correctamente'))
     .catch(err => console.error('❌ Error inicializando la BD Postgres:', err.message));
 
+// Servir index.html por defecto si existe en /public
 app.get("/", (req, res) => {
+    const indexFile = path.resolve("public/index.html");
+    if (fs.existsSync(indexFile)) {
+        return res.sendFile(indexFile);
+    }
     res.send("🔥 Bienvenido a MatchUp API (Backend funcionando)");
 });
 /**
@@ -60,10 +67,7 @@ app.get("/", (req, res) => {
  *       200:
  *         description: Mensaje de bienvenida
  */
-// Ruta principal
-app.get("/", (req, res) => {
-    res.send("🔥 Bienvenido a MatchUp API (Backend funcionando)");
-});
+// Nota: la ruta "/" ya sirve `public/index.html` si existe.
 
 /**
  * @openapi
