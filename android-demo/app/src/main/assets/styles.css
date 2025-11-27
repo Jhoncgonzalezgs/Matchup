@@ -1,0 +1,13 @@
+*{box-sizing:border-box}
+body{font-family:system-ui,-apple-system,Roboto,Segoe UI,Arial;line-height:1.4;margin:0;background:#f7f7fb;color:#111}
+header{background:linear-gradient(90deg,#5b6be6,#7bb4ff);color:white;padding:1.2rem}
+header h1{margin:.2rem 0}
+main{padding:1rem;max-width:1100px;margin:1rem auto}
+.box{background:white;border-radius:8px;padding:1rem;margin:1rem 0;box-shadow:0 6px 18px rgba(7,12,34,0.06)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:1rem}
+input,textarea,button{display:block;width:100%;padding:.6rem;margin:.4rem 0;border-radius:6px;border:1px solid #ddd}
+button{background:#5b6be6;color:#fff;border:none;cursor:pointer}
+button:disabled{opacity:.6}
+pre{background:#f5f7ff;padding:.6rem;margin:0;border-radius:6px;overflow:auto}
+#searchResults, #matches, #messagesContainer, #photoResult{margin-top:.6rem}
+footer{text-align:center;padding:1rem;color:#666}

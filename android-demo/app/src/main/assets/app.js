@@ -1,10 +1,9 @@
-// Permite inyectar la URL desde el WebView (window.BASE_API_URL), si no está definida, usa origin o fallback
-const baseUrl = (window && window.BASE_API_URL) || window.location.origin || 'http://localhost:3000';
+// Base URL injection support; default to origin if not provided
+const baseUrl = (window && window.BASE_API_URL) || window.location.origin || 'http://10.0.2.2:3000';
 
 function setToken(token) { localStorage.setItem('token', token); }
 function getToken() { return localStorage.getItem('token'); }
 
-// Helper
 async function api(path, method='GET', body=null, isForm=false) {
   const headers = {};
   const token = getToken();

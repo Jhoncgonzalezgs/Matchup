@@ -131,11 +131,12 @@ app.use((err, req, res, next) => {
 
 // Inicialización del servidor
 const PORT = process.env.PORT || 3000;
+const HOST = process.env.HOST || '0.0.0.0';
 
 if (!process.env.JWT_SECRET) {
     console.warn("⚠️ JWT_SECRET no definido. Genera uno y colócalo en las variables de entorno para entornos de producción.");
 }
 
-app.listen(PORT, () => {
-    console.log(`🚀 MatchUp backend running on port ${PORT}`);
+app.listen(PORT, HOST, () => {
+    console.log(`🚀 MatchUp backend running on ${HOST}:${PORT}`);
 });
