@@ -2,7 +2,7 @@ import nodemailer from "nodemailer";
 
 // CONFIGURACIÓN SMTP REAL (opcional)
 const transporter = nodemailer.createTransport({
-    service: "gmail", // puedes cambiarlo
+    service: "gmail",
     auth: {
         user: "tu_correo@gmail.com",
         pass: "tu_contraseña_app"

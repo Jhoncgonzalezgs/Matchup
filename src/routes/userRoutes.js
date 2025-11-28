@@ -35,7 +35,6 @@ const router = express.Router();
  *       200:
  *         description: Lista de usuarios coincidentes
  */
-// Buscar perfiles públicos (solo descripción)
 router.get("/search", searchUsers);
 
 /**
@@ -53,7 +52,6 @@ router.get("/search", searchUsers);
  *       200:
  *         description: Perfil público del usuario
  */
-// Obtener perfil de otro usuario
 router.get("/:id", getUserProfile);
 
 
@@ -72,7 +70,6 @@ router.get("/:id", getUserProfile);
  *       200:
  *         description: Perfil del usuario
  */
-// Obtener mi perfil
 router.get("/me/profile", auth, getMyProfile);
 
 /**
@@ -97,10 +94,8 @@ router.get("/me/profile", auth, getMyProfile);
  *       200:
  *         description: Perfil actualizado
  */
-// Editar mi perfil personal
 router.put("/me/edit", auth, editProfile);
 
-// Listar usuarios disponibles para match
 router.get("/match/list", auth, listUsersForMatch);
 
 
@@ -108,16 +103,12 @@ router.get("/match/list", auth, listUsersForMatch);
    RUTAS DE ADMINISTRADOR
 ===================================================== */
 
-// Ver todos los usuarios
 router.get("/admin/all-users", auth, isAdmin, adminGetUsers);
 
-// Bloquear usuario
 router.put("/admin/block/:id", auth, isAdmin, adminBlockUser);
 
-// Activar/Desbloquear usuario
 router.put("/admin/activate/:id", auth, isAdmin, adminActivateUser);
 
-// Eliminar usuario
 router.delete("/admin/delete/:id", auth, isAdmin, adminDeleteUser);
 
 export default router;

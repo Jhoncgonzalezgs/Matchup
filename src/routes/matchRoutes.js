@@ -24,7 +24,6 @@ const router = express.Router();
  *       200:
  *         description: Like enviado o Match detectado
  */
-// Dar like a un usuario
 router.post("/like", auth, giveLike);
 
 /**
@@ -38,7 +37,6 @@ router.post("/like", auth, giveLike);
  *       200:
  *         description: Lista de matches
  */
-// Obtener todos los matches del usuario autenticado
 router.get("/", auth, getMatches);
 
 /**
@@ -58,7 +56,6 @@ router.get("/", auth, getMatches);
  *       200:
  *         description: Match eliminado correctamente
  */
-// Eliminar un match
 router.delete("/:otherUserId", auth, removeMatch);
 
 export default router;

@@ -52,7 +52,7 @@ export const register = async (req, res) => {
 
         res.json({ message: "Usuario registrado. Revisa tu correo para confirmar tu cuenta.", confirm_token_dev: token });
     } catch (err) {
-        if (err && err.code === '23505') { // unique_violation
+        if (err && err.code === '23505') {
             return res.status(400).json({ error: "Email o documento ya registrado" });
         }
         console.error(err);

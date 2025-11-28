@@ -16,7 +16,6 @@ const router = express.Router();
  *       200:
  *         description: Lista de usuarios
  */
-// SOLO ADMIN → ver lista de usuarios
 router.get("/users", auth, isAdmin, listUsers);
 
 /**
@@ -41,7 +40,6 @@ router.get("/users", auth, isAdmin, listUsers);
  *       200:
  *         description: Usuario bloqueado/desbloqueado
  */
-// SOLO ADMIN → bloquear / desbloquear usuarios
 router.post("/block", auth, isAdmin, blockUser);
 
 export default router;

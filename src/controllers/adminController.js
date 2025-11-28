@@ -17,7 +17,7 @@ export const listUsers = async (req, res) => {
 // BLOQUEAR / DESBLOQUEAR USUARIO
 // ============================
 export const blockUser = async (req, res) => {
-    const { userId, block } = req.body; // block = 1 (bloquear), 0 (desbloquear)
+    const { userId, block } = req.body;
     try {
         await db.run(`UPDATE users SET blocked = $1 WHERE id = $2`, [block ? true : false, userId]);
         await db.run(`INSERT INTO admin_logs (admin_id, action, target_user) VALUES ($1, $2, $3)`, [req.user.id, block ? "BLOCK_USER" : "UNBLOCK_USER", userId]);

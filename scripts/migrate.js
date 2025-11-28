@@ -1,14 +1,10 @@
-import db from '../src/db/postgres.js';
+import db from '../src/db/database.js';
 
-async function run() {
-  try {
-    await db.init();
-    console.log('Migrations executed successfully');
+// Ejecuta la inicialización (el propio import en database.js hace las DDLs)
+console.log('Ejecutando migraciones...');
+
+// Esperar un breve tiempo para que las tablas se creen en la serialización
+setTimeout(() => {
+    console.log('Migración finalizada');
     process.exit(0);
-  } catch (err) {
-    console.error('Migration error:', err);
-    process.exit(1);
-  }
-}
-
-run();
+}, 1000);

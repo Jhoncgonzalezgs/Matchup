@@ -30,7 +30,7 @@ const router = express.Router();
 router.post("/", auth, upload.single("photo"), uploadPhoto);
 
 /**
- * @openapi
+router.post("/", auth, upload.single("photo"), uploadPhoto);
  * /photos/my-photos:
  *   get:
  *     security:
@@ -43,7 +43,7 @@ router.post("/", auth, upload.single("photo"), uploadPhoto);
 // Obtener mis fotos
 router.get("/my-photos", auth, getMyPhotos);
 
-/**
+router.get("/my-photos", auth, getMyPhotos);
  * @openapi
  * /photos/user/{id}:
  *   get:
@@ -60,7 +60,7 @@ router.get("/my-photos", auth, getMyPhotos);
  */
 // Obtener fotos de otro usuario (público)
 router.get("/user/:id", getUserPhotos);
-
+router.get("/user/:id", getUserPhotos);
 /**
  * @openapi
  * /photos/{id}:

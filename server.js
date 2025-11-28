@@ -37,12 +37,12 @@ app.use(express.static(path.resolve("public")));
 app.use("/uploads", express.static(path.resolve(uploadsDir)));
 
 // Rutas reales
-app.use("/auth", authRoutes);      // registro, login, confirmación, reset
-app.use("/users", userRoutes);     // perfil y búsqueda
-app.use("/match", matchRoutes);    // likes + matches
-app.use("/messages", messageRoutes); // mensajes
-app.use("/admin", adminRoutes);    // admin panel
-app.use("/photos", photoRoutes);   // subir y obtener fotos
+app.use("/auth", authRoutes);
+app.use("/users", userRoutes);
+app.use("/match", matchRoutes);
+app.use("/messages", messageRoutes);
+app.use("/admin", adminRoutes);
+app.use("/photos", photoRoutes);
 
 // Comprobación de base de datos
 // Initialize Postgres and create tables
