@@ -8,8 +8,8 @@ yarn-error.log
 .env.local
 .env.*.local
 
-# Base de datos
-matchup.db
+# Base de datos (SQLite, no usado en Postgres-only setups)
+# matchup.db
 
 # Archivos de fotos
 uploads/
