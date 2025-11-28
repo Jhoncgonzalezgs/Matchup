@@ -7,7 +7,7 @@ services:
     environment:
       - NODE_ENV=development
       - PORT=3000
-      #- JWT_SECRET=secret_for_local
+      - JWT_SECRET=secret_for_local
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/matchup
       - PGHOST=db
       - PGUSER=postgres

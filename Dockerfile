@@ -28,7 +28,7 @@ ENV NODE_ENV=production
 ENV PORT=3000
 # ENV DB_PATH=/data/matchup.db  # Not used: Postgres is the DB backend
 ENV UPLOADS_DIR=/data/uploads
-#ENV JWT_SECRET=
+ENV JWT_SECRET=
 
 EXPOSE 3000
 

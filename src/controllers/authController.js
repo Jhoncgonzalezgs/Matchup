@@ -19,7 +19,7 @@ export const login = async (req, res) => {
         const passwordMatch = await bcrypt.compare(password, user.password);
         if (!passwordMatch) return res.status(400).json({ error: "Contraseña incorrecta" });
 
-        const token = jwt.sign({ id: user.id, role: user.role }, { expiresIn: "7d" }); // process.env.JWT_SECRET,
+        const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "7d" });
 
         res.json({ message: "Login exitoso", token });
     } catch (err) {
@@ -52,7 +52,7 @@ export const register = async (req, res) => {
 
         res.json({ message: "Usuario registrado. Revisa tu correo para confirmar tu cuenta.", confirm_token_dev: token });
     } catch (err) {
-        if (err && err.code === '23505') {
+        if (err && err.code === '23505') { // unique_violation
             return res.status(400).json({ error: "Email o documento ya registrado" });
         }
         console.error(err);

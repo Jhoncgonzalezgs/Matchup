@@ -136,15 +136,15 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || '0.0.0.0';
 
-// if (!process.env.JWT_SECRET) {
-//     const msg = "❌ JWT_SECRET no definido. Establece JWT_SECRET en las variables de entorno antes de iniciar la aplicación.";
-//     if (process.env.NODE_ENV === 'production') {
-//         console.error(msg);
-//         process.exit(1);
-//     } else {
-//         console.warn(msg + " Se recomienda configurar en todos los entornos.");
-//     }
-// }
+if (!process.env.JWT_SECRET) {
+    const msg = "❌ JWT_SECRET no definido. Establece JWT_SECRET en las variables de entorno antes de iniciar la aplicación.";
+    if (process.env.NODE_ENV === 'production') {
+        console.error(msg);
+        process.exit(1);
+    } else {
+        console.warn(msg + " Se recomienda configurar en todos los entornos.");
+    }
+}
 
 // HTTP server (to attach WebSocket server)
 const server = http.createServer(app);
@@ -159,7 +159,7 @@ wss.on('connection', (ws, req) => {
         const u = new URL(req.url, `http://${req.headers.host}`);
         const token = u.searchParams.get('token');
         if (!token) throw new Error('No token');
-        // const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const userId = decoded.id;
         ws.userId = userId;
         wsClients.set(userId, ws);

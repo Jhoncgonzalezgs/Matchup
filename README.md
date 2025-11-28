@@ -11,7 +11,7 @@ Cómo correr (local):
 ```bash
 NODE_ENV=development
 PORT=3000
-#JWT_SECRET=secret_for_local
+JWT_SECRET=secret_for_local
 DATABASE_URL=postgresql://postgres:postgres@localhost:5432/matchup
 PGHOST=localhost
 PGUSER=postgres
@@ -39,6 +39,5 @@ Docker:
 
 ```bash
 docker build -t matchup-backend:latest .
-docker run -it -p 3000:3000  --env DATABASE_URL="postgresql://user:pass@host:5432/db" matchup-backend:latest
+docker run -it -p 3000:3000 --env JWT_SECRET="REEMPLAZA" --env DATABASE_URL="postgresql://user:pass@host:5432/db" matchup-backend:latest
 ```
-# --env JWT_SECRET="REEMPLAZA" 
