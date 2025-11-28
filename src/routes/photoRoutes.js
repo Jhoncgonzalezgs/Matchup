@@ -26,11 +26,10 @@ const router = express.Router();
  *       200:
  *         description: Imagen subida correctamente
  */
-// Subir foto (solo 1 por vez)
 router.post("/", auth, upload.single("photo"), uploadPhoto);
 
 /**
-router.post("/", auth, upload.single("photo"), uploadPhoto);
+ * @openapi
  * /photos/my-photos:
  *   get:
  *     security:
@@ -40,10 +39,9 @@ router.post("/", auth, upload.single("photo"), uploadPhoto);
  *       200:
  *         description: Lista de fotos del usuario
  */
-// Obtener mis fotos
 router.get("/my-photos", auth, getMyPhotos);
 
-router.get("/my-photos", auth, getMyPhotos);
+/**
  * @openapi
  * /photos/user/{id}:
  *   get:
@@ -58,9 +56,8 @@ router.get("/my-photos", auth, getMyPhotos);
  *       200:
  *         description: Lista de fotos del usuario
  */
-// Obtener fotos de otro usuario (público)
 router.get("/user/:id", getUserPhotos);
-router.get("/user/:id", getUserPhotos);
+
 /**
  * @openapi
  * /photos/{id}:
@@ -78,7 +75,6 @@ router.get("/user/:id", getUserPhotos);
  *       200:
  *         description: Foto eliminada correctamente
  */
-// Eliminar una foto propia
 router.delete("/:id", auth, deletePhoto);
 
 export default router;
